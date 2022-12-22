@@ -136,6 +136,27 @@ Ext.define('Rambox.view.main.Main', {
 					}
 					,tools: [
 						{
+							xtype: "checkboxgroup",
+							items: [
+								{
+									xtype: "checkbox",
+									boxLabel: "Left",
+									name: "left",
+									checked: true,
+								},
+								{
+									xtype: "checkbox",
+									boxLabel: "Right",
+									margin: "0 10 0 10",
+									name: "right",
+									checked: true,
+								},
+							],
+							listeners: {
+								change: "onEnableDisableAllService",
+							},
+						},
+						{
 							 xtype: 'button'
 							,glyph: 'xf1f8@FontAwesome'
 							,baseCls: ''

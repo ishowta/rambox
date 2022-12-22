@@ -1,3 +1,32 @@
+const disableService = (rec) => {
+  Ext.getCmp('tab_'+rec.get('id')).destroy();
+}
+
+const enableService = (rec, hideTab) => {
+	Ext.cq1('app-main').insert(rec.get('align') === 'left' ? rec.get('position') : rec.get('position')+1, {
+		xtype: 'webview'
+		,id: 'tab_'+rec.get('id')
+		,title: rec.get('name')
+		,icon: rec.get('type') !== 'custom' ? 'resources/icons/'+rec.get('logo') : ( rec.get('logo') === '' ? 'resources/icons/custom.png' : rec.get('logo'))
+		,src: rec.get('url')
+		,type: rec.get('type')
+		,muted: rec.get('muted')
+		,includeInGlobalUnreadCounter: rec.get('includeInGlobalUnreadCounter')
+		,displayTabUnreadCounter: rec.get('displayTabUnreadCounter')
+		,enabled: rec.get('enabled')
+		,record: rec
+		,useragent: ipc.sendSync('getConfig').user_agent
+		,hidden: hideTab
+		,tabConfig: {
+				service: rec
+		}
+	});
+}
+
+const isServiceEnabled = (service) => {
+	return Ext.getCmp('tab_'+service.get('id')) != undefined
+}
+
 Ext.define('Rambox.view.main.MainController', {
 	 extend: 'Ext.app.ViewController'
 
@@ -96,30 +125,27 @@ Ext.define('Rambox.view.main.MainController', {
 		Ext.getCmp('tab_'+e.record.get('id')).setTitle(e.record.get('name'));
 	}
 
+	,onEnableDisableAllService: function(cg, newValue, oldValue) {
+		const services = [...Ext.getStore('Services').data.items]
+
+		services.forEach(service => {
+			const beforeEnabled = isServiceEnabled(service)
+			const afterEnabled = newValue[service.get('align')] === "on"
+			if(beforeEnabled && !afterEnabled){
+				disableService(service);
+			}else if(!beforeEnabled && afterEnabled){
+				enableService(service, false);
+			}
+		})
+	}
+
 	,onEnableDisableService: function(cc, rowIndex, checked, obj, hideTab) {
 		var rec = Ext.getStore('Services').getAt(rowIndex);
 
 		if ( !checked ) {
-			Ext.getCmp('tab_'+rec.get('id')).destroy();
+			disableService(rec);
 		} else {
-			Ext.cq1('app-main').insert(rec.get('align') === 'left' ? rec.get('position') : rec.get('position')+1, {
-				 xtype: 'webview'
-				,id: 'tab_'+rec.get('id')
-				,title: rec.get('name')
-				,icon: rec.get('type') !== 'custom' ? 'resources/icons/'+rec.get('logo') : ( rec.get('logo') === '' ? 'resources/icons/custom.png' : rec.get('logo'))
-				,src: rec.get('url')
-				,type: rec.get('type')
-				,muted: rec.get('muted')
-				,includeInGlobalUnreadCounter: rec.get('includeInGlobalUnreadCounter')
-				,displayTabUnreadCounter: rec.get('displayTabUnreadCounter')
-				,enabled: rec.get('enabled')
-				,record: rec
-				,useragent: ipc.sendSync('getConfig').user_agent
-				,hidden: hideTab
-				,tabConfig: {
-					 service: rec
-				}
-			});
+			enableService(rec, hideTab);
 		}
 	}
 
